@@ -296,3 +296,10 @@ function localNlpSolve(query) {
         spokenResponse: "I could not resolve the mathematical equation."
     };
 }
+
+// Cloudflare Workers with Static Assets compatibility
+export default {
+    async fetch(request, env, ctx) {
+        return onRequest({ request, env, params: {} });
+    }
+};
