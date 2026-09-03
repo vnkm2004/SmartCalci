@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart AI Voice Calculator | Multilingual Gemini & Whisper Math</title>
+    <meta name="description" content="Futuristic smart voice calculator powered by Spring Boot and Gemini AI. Multilingual speech recognition, step-by-step math problem solving, and transparent liquid glass aesthetics.">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="alternate icon" href="favicon.svg">
+
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="css/style.css?v=1.3.9">
+</head>
+<body>
+    <!-- Robotic background grid overlay -->
+    <div class="bg-grid-overlay"></div>
+
+    <div class="app-wrapper">
+        <!-- Top Navigation / Header Bar -->
+        <header class="app-header">
+            <div class="brand-section">
+                <div class="brand-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M19 4H5l7 8-7 8h14"/>
+                    </svg>
+                </div>
+                <div class="brand-titles">
+                    <h1>SMART AI CALC</h1>
+                    <div class="brand-tagline">QUANTUM VOICE & NEURAL MATH SYSTEM</div>
+                </div>
+            </div>
+
+            <div class="header-controls">
+                <!-- Theme Switcher Button -->
+                <button id="themeToggleBtn" class="glass-pill-btn" title="Toggle Theme (Dark / Light)">
+                    <span id="themeToggleIcon" class="svg-icon-wrap">
+                        <!-- Moon SVG default -->
+                        <svg class="icon-svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                        </svg>
+                    </span>
+                    <span id="themeToggleText">DARK</span>
+                </button>
+
+                <!-- History Drawer Button -->
+                <button id="historyToggleBtn" class="glass-pill-btn" title="View Calculation History">
+                    <span class="svg-icon-wrap">
+                        <svg class="icon-svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <polyline points="12 6 12 12 16 14"></polyline>
+                        </svg>
+                    </span>
+                    <span>HISTORY</span>
+                </button>
+
+                <!-- Settings Button -->
+                <button id="settingsToggleBtn" class="glass-pill-btn" title="Settings & Gemini API Key">
+                    <span class="svg-icon-wrap">
+                        <svg class="icon-svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="3"></circle>
+                            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                        </svg>
+                    </span>
+                    <span>CONFIG</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Layout (Calculator Device + AI Voice Assistant) -->
+        <main class="main-layout">
+            <!-- Left Panel: Calculator Device (Liquid Glass Frame) -->
+            <section class="calculator-device" aria-label="Smart Calculator Device">
+                <!-- Mode & Angle Unit Bar -->
+                <div class="mode-bar">
+                    <div style="display:flex; gap:4px;">
+                        <button id="standardTab" class="tab-btn active">STANDARD</button>
+                        <button id="scientificTab" class="tab-btn">SCIENTIFIC</button>
+                    </div>
+                    <div id="angleUnitBadge" class="angle-badge" title="Click to toggle DEG / RAD">DEG</div>
+                </div>
+
+                <!-- Robotic LCD Screen -->
+                <div class="lcd-screen">
+                    <div class="lcd-status-row">
+                        <span>SYSTEM READY</span>
+                        <span id="memIndicator" class="memory-indicator">MEM</span>
+                    </div>
+                    <div id="lcdExpression" class="lcd-expression-line" aria-label="Mathematical Expression"></div>
+                    <div id="lcdResult" class="lcd-result-line" aria-label="Calculation Result">
+                        <span>0</span>
+                        <span class="cursor-blink"></span>
+                    </div>
+                </div>
+
+                <!-- Memory Keys Row -->
+                <div class="mem-row">
+                    <button class="mem-btn" data-action="mc">MC</button>
+                    <button class="mem-btn" data-action="mr">MR</button>
+                    <button class="mem-btn" data-action="m+">M+</button>
+                    <button class="mem-btn" data-action="m-">M-</button>
+                    <button class="mem-btn" data-action="ms">MS</button>
+                </div>
+
+                <!-- Collapsible Scientific Functions Grid -->
+                <div id="scientificGrid" class="scientific-grid collapsed">
+                    <button class="calc-btn sci-btn" data-fn="sin">sin</button>
+                    <button class="calc-btn sci-btn" data-fn="cos">cos</button>
+                    <button class="calc-btn sci-btn" data-fn="tan">tan</button>
+                    <button class="calc-btn sci-btn" data-val="^">x^y</button>
+
+                    <button class="calc-btn sci-btn" data-fn="asin">asin</button>
+                    <button class="calc-btn sci-btn" data-fn="acos">acos</button>
+                    <button class="calc-btn sci-btn" data-fn="atan">atan</button>
+                    <button class="calc-btn sci-btn" data-fn="sqrt">√x</button>
+
+                    <button class="calc-btn sci-btn" data-fn="ln">ln</button>
+                    <button class="calc-btn sci-btn" data-fn="log">log</button>
+                    <button class="calc-btn sci-btn" data-fn="fact">x!</button>
+                    <button class="calc-btn sci-btn" data-fn="cbrt">∛x</button>
+
+                    <button class="calc-btn sci-btn" data-val="pi">π</button>
+                    <button class="calc-btn sci-btn" data-val="e">e</button>
+                    <button class="calc-btn sci-btn" data-val="(">(</button>
+                    <button class="calc-btn sci-btn" data-val=")">)</button>
+                </div>
+
+                <!-- Standard Keypad Grid -->
+                <div class="keypad-grid">
+                    <button class="calc-btn clear-btn" data-action="clear">AC</button>
+                    <button class="calc-btn op-btn" data-action="delete" title="Backspace">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"></path>
+                            <line x1="18" y1="9" x2="12" y2="15"></line>
+                            <line x1="12" y1="9" x2="18" y2="15"></line>
+                        </svg>
+                    </button>
+                    <button class="calc-btn op-btn" data-val="%">%</button>
+                    <button class="calc-btn op-btn" data-val="÷">÷</button>
+
+                    <button class="calc-btn" data-val="7">7</button>
+                    <button class="calc-btn" data-val="8">8</button>
+                    <button class="calc-btn" data-val="9">9</button>
+                    <button class="calc-btn op-btn" data-val="×">×</button>
+
+                    <button class="calc-btn" data-val="4">4</button>
+                    <button class="calc-btn" data-val="5">5</button>
+                    <button class="calc-btn" data-val="6">6</button>
+                    <button class="calc-btn op-btn" data-val="-">−</button>
+
+                    <button class="calc-btn" data-val="1">1</button>
+                    <button class="calc-btn" data-val="2">2</button>
+                    <button class="calc-btn" data-val="3">3</button>
+                    <button class="calc-btn op-btn" data-val="+">+</button>
+
+                    <button class="calc-btn" data-val="0">0</button>
+                    <button class="calc-btn" data-val="00">00</button>
+                    <button class="calc-btn" data-val=".">.</button>
+                    <button class="calc-btn equals-btn" data-action="calculate">=</button>
+                </div>
+
+                <!-- Live Caption Banner (Positioned Below Calculator Keypad) -->
+                <div id="liveCaptionCard" class="live-caption-card">
+                    <div class="live-caption-top">
+                        <div class="live-caption-tag">
+                            <span id="liveCaptionDot" class="live-caption-pulse-dot"></span>
+                            <span class="live-caption-heading">LIVE CAPTION</span>
+                        </div>
+                        <span id="liveCaptionStatus" class="live-caption-state">READY</span>
+                    </div>
+                    <div id="liveCaptionText" class="live-caption-body">
+                        Speak or calculate to see real-time captions here...
+                    </div>
+                </div>
+            </section>
+
+            <!-- Right Panel: AI Voice Assistant & Step Reasoning -->
+            <section class="ai-assistant-panel" aria-label="AI Voice and Natural Language Math Reasoning">
+                <!-- Voice Assistant Hero Card -->
+                <div class="voice-hero-card">
+                    <div class="voice-card-header">
+                        <div id="aiEngineBadge" class="ai-engine-badge">
+                            <span id="aiEngineDot" class="status-dot"></span>
+                            <span id="aiEngineText">AI ENGINE ONLINE</span>
+                        </div>
+                        <div style="font-family:var(--font-robotic-mono); font-size:0.72rem; color:var(--text-secondary);">
+                            MULTILINGUAL AUDIO
+                        </div>
+                    </div>
+
+                    <!-- Glowing Liquid Microphone -->
+                    <div class="mic-wrapper">
+                        <div id="micPulseRing" class="mic-pulse-ring"></div>
+                        <button id="micButton" class="mic-button" title="Click to speak your math problem">
+                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                                <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                                <line x1="12" y1="19" x2="12" y2="23"></line>
+                                <line x1="8" y1="23" x2="16" y2="23"></line>
+                            </svg>
+                        </button>
+                    </div>
+
+                    <div id="micStatusText" class="mic-instructions">
+                        Click microphone to speak in any language (English, Hindi, Spanish, French, etc.)
+                    </div>
+
+                    <!-- Google Voice Style Live Detected Words Stream -->
+                    <div id="liveVoiceWordsStream" class="live-words-stream" style="display:none;"></div>
+
+                    <!-- Real-Time Frequency Waveform Visualizer -->
+                    <div class="waveform-container">
+                        <canvas id="audioWaveCanvas"></canvas>
+                    </div>
+
+                    <!-- Floating Liquid Glass Music Player Card (Direct Calculator Music Controller) -->
+                    <div id="calcMusicPlayerCard" class="calc-music-card">
+                        <div class="calc-music-left">
+                            <div class="calc-music-badge">
+                                <span class="music-live-indicator" id="calcMusicPulseDot"></span>
+                                <span id="calcMusicStyleLabel">CYBERPUNK BEAT</span>
+                            </div>
+                            <div class="calc-music-sub">
+                                <span id="calcMusicBpmLabel">128 BPM</span>
+                                <div class="calc-mini-eq" id="calcMiniEq">
+                                    <span class="bar b1"></span>
+                                    <span class="bar b2"></span>
+                                    <span class="bar b3"></span>
+                                    <span class="bar b4"></span>
+                                    <span class="bar b5"></span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="calc-music-controls">
+                            <button id="calcMusicPrevBtn" class="calc-music-ctrl-btn" title="Previous Music Style">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <polygon points="19 20 9 12 19 4 19 20"></polygon>
+                                    <line x1="5" y1="19" x2="5" y2="5"></line>
+                                </svg>
+                            </button>
+                            <button id="calcMusicPlayBtn" class="calc-music-play-btn" title="Play / Pause Studio Music">
+                                <span id="calcMusicPlayIcon" style="display:flex;align-items:center;justify-content:center;">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                                        <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                                    </svg>
+                                </span>
+                            </button>
+                            <button id="calcMusicStopBtn" class="calc-music-ctrl-btn" title="Stop Music">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+                                    <rect x="5" y="5" width="14" height="14" rx="2"></rect>
+                                </svg>
+                            </button>
+                            <button id="calcMusicNextBtn" class="calc-music-ctrl-btn" title="Next Music Style">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <polygon points="5 4 15 12 5 20 5 4"></polygon>
+                                    <line x1="19" y1="5" x2="19" y2="19"></line>
+                                </svg>
+                            </button>
+                            <button id="calcMusicRandomBtn" class="calc-music-ctrl-btn" title="Randomize Groove Pattern">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="16 3 21 3 21 8"></polyline>
+                                    <line x1="4" y1="20" x2="21" y2="3"></line>
+                                    <polyline points="21 16 21 21 16 21"></polyline>
+                                    <line x1="15" y1="15" x2="21" y2="21"></line>
+                                    <line x1="4" y1="4" x2="9" y2="9"></line>
+                                </svg>
+                            </button>
+                            <button id="calcMusicOpenStudioBtn" class="calc-music-studio-btn" title="Open Full Cyber Beat Studio">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M9 18V5l12-2v13"></path>
+                                    <circle cx="6" cy="18" r="3"></circle>
+                                    <circle cx="18" cy="16" r="3"></circle>
+                                </svg>
+                                <span>STUDIO</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Natural Language Text Math Prompt Bar -->
+                    <div class="text-prompt-box">
+                        <input id="textPromptInput" class="prompt-input" type="text" placeholder="Or type any math word problem here...">
+                        <button id="textPromptSubmit" class="prompt-submit-btn">SOLVE</button>
+                    </div>
+                </div>
+
+                <!-- AI Decoded Solution & Step Breakdown Card -->
+                <div id="aiSolutionCard" class="ai-solution-card" style="display:none;">
+                    <div class="solution-header">
+                        <div class="solution-title">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect>
+                                <rect x="9" y="9" width="6" height="6"></rect>
+                                <line x1="9" y1="1" x2="9" y2="4"></line>
+                                <line x1="15" y1="1" x2="15" y2="4"></line>
+                                <line x1="9" y1="20" x2="9" y2="23"></line>
+                                <line x1="15" y1="20" x2="15" y2="23"></line>
+                                <line x1="20" y1="9" x2="23" y2="9"></line>
+                                <line x1="20" y1="14" x2="23" y2="14"></line>
+                                <line x1="1" y1="9" x2="4" y2="9"></line>
+                                <line x1="1" y1="14" x2="4" y2="14"></line>
+                            </svg>
+                            <span>AI MATH DECODER</span>
+                        </div>
+                        <span id="aiDetectedLang" class="lang-badge">Auto</span>
+                    </div>
+
+                    <div class="solution-body">
+                        <div class="solution-row">
+                            <span class="solution-label">Input Query</span>
+                            <div id="aiOriginalPrompt" class="solution-val"></div>
+                        </div>
+
+                        <div class="solution-row">
+                            <span class="solution-label">Decoded Formula</span>
+                            <div id="aiFormula" class="solution-val" style="font-weight:bold; color:var(--text-accent);"></div>
+                        </div>
+
+                        <div class="solution-row">
+                            <span class="solution-label">Step-by-Step Resolution</span>
+                            <div id="aiStepsList" class="solution-steps"></div>
+                        </div>
+
+                        <div class="solution-row">
+                            <span class="solution-label">Final Calculated Result</span>
+                            <div id="aiResultVal" class="solution-val" style="font-size:1.3rem; font-family:var(--font-robotic-display); font-weight:800;"></div>
+                        </div>
+                    </div>
+
+                    <div class="solution-actions">
+                        <button id="speakResultBtn" class="action-btn">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                                <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                            </svg>
+                            <span>Speak</span>
+                        </button>
+                        <button id="copyResultBtn" class="action-btn">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                            </svg>
+                            <span>Copy</span>
+                        </button>
+                        <button id="seeGraphBtn" class="action-btn highlight-graph-btn" title="View interactive mathematical graph of this result">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="18" y1="20" x2="18" y2="10"></line>
+                                <line x1="12" y1="20" x2="12" y2="4"></line>
+                                <line x1="6" y1="20" x2="6" y2="14"></line>
+                                <line x1="2" y1="20" x2="22" y2="20"></line>
+                            </svg>
+                            <span>See Graph</span>
+                        </button>
+                        <button id="loadToCalcBtn" class="action-btn">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="9 10 4 15 9 20"></polyline>
+                                <path d="M20 4v7a4 4 0 0 1-4 4H4"></path>
+                            </svg>
+                            <span>Load to Calc</span>
+                        </button>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- History Slide-out Flyout Drawer -->
+    <aside id="historyDrawer" class="history-drawer" aria-label="Calculation History Drawer">
+        <div class="modal-header">
+            <h2>HISTORY LOG</h2>
+            <button id="historyCloseBtn" class="modal-close-btn" title="Close">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+        </div>
+        <div id="historyList" class="history-list"></div>
+        <button id="clearHistoryBtn" class="action-btn" style="width:100%; justify-content:center; padding:10px 0;">CLEAR HISTORY</button>
+    </aside>
+
+    <!-- Glass Settings Modal -->
+    <div id="settingsModal" class="glass-modal-backdrop" aria-modal="true">
+        <div class="glass-modal-card">
+            <div class="modal-header">
+                <h2>SYSTEM CONFIG</h2>
+                <button id="settingsCloseBtn" class="modal-close-btn" title="Close">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="setting-group">
+                <label class="setting-title" for="apiKeyInput">Google Gemini API Key</label>
+                <div class="input-with-action">
+                    <input id="apiKeyInput" class="glass-input" type="password" placeholder="Enter Gemini API key for advanced audio AI...">
+                    <button id="saveApiKeyBtn" class="action-btn">SAVE</button>
+                </div>
+                <span style="font-family:var(--font-robotic-mono); font-size:0.7rem; color:var(--text-tertiary);">
+                    Multi-model support: Gemini 2.0 Flash with automatic fallback and offline NLP parser.
+                </span>
+            </div>
+
+            <div class="setting-group">
+                <label class="setting-title" for="voiceLangSelect">Speech Recognition Language</label>
+                <select id="voiceLangSelect" class="glass-input" style="cursor:pointer;">
+                    <option value="auto">Auto-Detect Any Language</option>
+                    <option value="en-US">English (US)</option>
+                    <option value="en-IN">English (India)</option>
+                    <option value="hi-IN">Hindi (हिंदी)</option>
+                    <option value="es-ES">Spanish (Español)</option>
+                    <option value="fr-FR">French (Français)</option>
+                    <option value="de-DE">German (Deutsch)</option>
+                    <option value="ja-JP">Japanese (日本語)</option>
+                    <option value="zh-CN">Chinese Mandarin (中文)</option>
+                    <option value="ru-RU">Russian (Русский)</option>
+                    <option value="ar-SA">Arabic (العربية)</option>
+                </select>
+            </div>
+
+            <div class="setting-group" style="width:100%; min-width:0; max-width:100%; box-sizing:border-box;">
+                <label class="setting-title" for="voicePersonaSelect">Spoken Voice Persona (Natural TTS)</label>
+                <div class="input-with-action" style="width:100%; min-width:0; max-width:100%; display:flex; gap:8px; align-items:center; box-sizing:border-box;">
+                    <select id="voicePersonaSelect" class="glass-input" style="cursor:pointer; flex:1 1 0; width:0; min-width:0; max-width:100%; box-sizing:border-box; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">
+                        <option value="">Auto-Select Best Natural Voice</option>
+                    </select>
+                    <button id="testVoiceBtn" class="action-btn" title="Audition this voice" style="flex-shrink:0; white-space:nowrap;">Test</button>
+                </div>
+            </div>
+
+            <div class="toggle-row">
+                <span class="toggle-label">Futuristic Robotic Sound FX</span>
+                <label class="switch">
+                    <input id="toggleSoundSwitch" type="checkbox" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
+
+            <div class="toggle-row">
+                <span class="toggle-label">Voice Spoken Answer (TTS)</span>
+                <label class="switch">
+                    <input id="toggleTtsSwitch" type="checkbox" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <!-- Interactive Math Visualizer Graph Modal -->
+    <div id="graphModal" class="glass-modal-backdrop" aria-hidden="true">
+        <div class="glass-modal-card graph-modal-card">
+            <div class="modal-header">
+                <div class="modal-title-wrap">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="20" x2="18" y2="10"></line>
+                        <line x1="12" y1="20" x2="12" y2="4"></line>
+                        <line x1="6" y1="20" x2="6" y2="14"></line>
+                        <line x1="2" y1="20" x2="22" y2="20"></line>
+                    </svg>
+                    <h2>MATH VISUALIZER GRAPH</h2>
+                </div>
+                <button id="graphCloseBtn" class="modal-close-btn" title="Close Graph">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+            <div class="graph-modal-body">
+                <div class="graph-toolbar">
+                    <div class="graph-expr-preview">
+                        <span class="graph-badge">y = f(x)</span>
+                        <input type="text" id="graphCustomExprInput" class="graph-expr-input" placeholder="e.g. cos(x), sin(x), x^2, sqrt(x)" />
+                        <button id="graphPlotCustomBtn" class="action-btn" style="padding: 4px 12px;">Plot</button>
+                    </div>
+                    <div class="graph-zoom-controls">
+                        <button id="graphZoomInBtn" class="graph-control-btn" title="Zoom In">+</button>
+                        <button id="graphZoomOutBtn" class="graph-control-btn" title="Zoom Out">−</button>
+                        <button id="graphResetBtn" class="graph-control-btn" title="Reset View">⟲</button>
+                    </div>
+                </div>
+                <div class="graph-presets-row">
+                    <span class="preset-label">FUNCTIONS:</span>
+                    <button class="preset-pill active" data-fn="cos(x)">cos(x)</button>
+                    <button class="preset-pill" data-fn="sin(x)">sin(x)</button>
+                    <button class="preset-pill" data-fn="tan(x)">tan(x)</button>
+                    <button class="preset-pill" data-fn="x^2">x²</button>
+                    <button class="preset-pill" data-fn="x^3 - 3*x">x³ - 3x</button>
+                    <button class="preset-pill" data-fn="sqrt(x)">√x</button>
+                    <button class="preset-pill" data-fn="1/x">1/x</button>
+                </div>
+                <div class="graph-canvas-wrapper">
+                    <canvas id="mathGraphCanvas"></canvas>
+                    <div id="graphTooltip" class="graph-tooltip"></div>
+                </div>
+                <div id="graphStatsBar" class="graph-stats-bar">
+                    <span id="graphStatExpr">Function / Steps</span>
+                    <span id="graphStatRange">Range: x ∈ [-10, 10]</span>
+                    <span id="graphStatResult">Answer: </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Funny Themed Gemini API Key Required Modal -->
+    <div id="apiKeyRequiredModal" class="glass-modal-backdrop" aria-hidden="true">
+        <div class="glass-modal-card api-oops-card">
+            <div class="api-oops-header">
+                <div class="api-oops-robot-avatar">
+                    <span class="robot-antenna-spark">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                        </svg>
+                    </span>
+                    <div class="robot-screen">
+                        <span class="robot-eye left">●</span>
+                        <span class="robot-eye right">●</span>
+                        <div class="robot-mouth-wave">〜</div>
+                    </div>
+                </div>
+                <button id="closeApiKeyPromptBtn" class="modal-close-btn" title="Close">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+            <h2 class="api-oops-title">NEURAL UPGRADE REQUIRED</h2>
+            <p class="api-oops-desc">
+                My local circuits can calculate arithmetic and formulas, but to decode quantum-level word problems, calculus, and multi-step reasoning, I need your <strong>Gemini API Key</strong>!
+            </p>
+            <div class="api-oops-tip">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9 18h6"></path>
+                    <path d="M10 22h4"></path>
+                    <path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 0 1 8.91 14"></path>
+                </svg>
+                <span>It takes 10 seconds and is 100% free from Google AI Studio.</span>
+            </div>
+            <div class="api-oops-actions">
+                <button id="openSettingsFromPromptBtn" class="glass-pill-btn api-oops-primary-btn">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="7.5" cy="15.5" r="4.5"></circle>
+                        <path d="M21 2l-9.6 9.6"></path>
+                        <path d="M15.5 7.5l2.5 2.5"></path>
+                    </svg>
+                    <span>Add Gemini Key in Settings</span>
+                </button>
+                <button id="dismissApiKeyPromptBtn" class="action-btn">
+                    <span>Try Local Math Anyway</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Secret Music Creator & Studio Visualizer Modal (Unlocked via 5 Taps) -->
+    <div id="musicStudioModal" class="glass-modal-backdrop" aria-hidden="true">
+        <div class="glass-modal-card music-studio-card">
+            <!-- Studio Header -->
+            <div class="modal-header studio-header">
+                <div class="modal-title-wrap">
+                    <span class="studio-logo-icon">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M9 18V5l12-2v13"></path>
+                            <circle cx="6" cy="18" r="3"></circle>
+                            <circle cx="18" cy="16" r="3"></circle>
+                        </svg>
+                    </span>
+                    <div>
+                        <h2 class="studio-title">CYBER BEAT & SYNTH STUDIO</h2>
+                        <span class="studio-subtitle">5-Tap Secret Unlocked • Multi-Track Sequencer & Synthesizer</span>
+                    </div>
+                </div>
+                <div class="studio-header-actions">
+                    <button id="studioDownloadWavBtn" class="glass-pill-btn accent-glow" title="Download song as 16-bit WAV file">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7 10 12 15 17 10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                        <span>Download Song (.WAV)</span>
+                    </button>
+                    <button id="musicStudioCloseBtn" class="modal-close-btn" title="Close Music Studio">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Studio Body -->
+            <div class="music-studio-body">
+                <!-- Top: High-Res Music Studio Visualizer Capsule -->
+                <div class="studio-visualizer-section">
+                    <div class="waveform-container studio-eq-container">
+                        <canvas id="studioVisualizerCanvas"></canvas>
+                    </div>
+                </div>
+
+                <!-- Transport Bar & Sound Kit Controls -->
+                <div class="studio-transport-bar">
+                    <div class="transport-controls">
+                        <button id="studioPlayBtn" class="studio-btn play-btn" title="Play / Repeat Loop">
+                            <span id="studioPlayIcon">
+                                <svg class="svg-icon-play" width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+                                    <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                                </svg>
+                            </span>
+                            <span id="studioPlayText">PLAY LOOP</span>
+                        </button>
+                        <button id="studioStopBtn" class="studio-btn" title="Stop Loop">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                                <rect x="5" y="5" width="14" height="14" rx="2"></rect>
+                            </svg>
+                            <span>STOP</span>
+                        </button>
+                        <button id="studioClearBtn" class="studio-btn" title="Clear Grid">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="3 6 5 6 21 6"></polyline>
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                            </svg>
+                            <span>CLEAR</span>
+                        </button>
+                        <button id="studioRandomBtn" class="studio-btn" title="Randomize All Tracks">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="16 3 21 3 21 8"></polyline>
+                                <line x1="4" y1="20" x2="21" y2="3"></line>
+                                <polyline points="21 16 21 21 16 21"></polyline>
+                                <line x1="15" y1="15" x2="21" y2="21"></line>
+                                <line x1="4" y1="4" x2="9" y2="9"></line>
+                            </svg>
+                            <span>RANDOM ALL</span>
+                        </button>
+                        <button id="studioRandomDrumsBtn" class="studio-btn" title="Randomize Drum Patterns">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <circle cx="12" cy="12" r="4"></circle>
+                            </svg>
+                            <span>DRUMS</span>
+                        </button>
+                        <button id="studioRandomMelodyBtn" class="studio-btn" title="Randomize Melodies & Bass">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M9 18V5l12-2v13"></path>
+                                <circle cx="6" cy="18" r="3"></circle>
+                                <circle cx="18" cy="16" r="3"></circle>
+                            </svg>
+                            <span>MELODY</span>
+                        </button>
+                        <button id="studioGlitchBtn" class="studio-btn" title="Glitch / Syncopation">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+                                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                            </svg>
+                            <span>GLITCH</span>
+                        </button>
+                    </div>
+
+                    <div class="step-length-wrap">
+                        <span class="ctrl-label">STEPS:</span>
+                        <button class="length-pill active" data-steps="16">16</button>
+                        <button class="length-pill" data-steps="32">32</button>
+                        <button class="length-pill" data-steps="64">64</button>
+                        <button class="length-pill" data-steps="128">128</button>
+                        <button id="addStepBtn" class="length-pill" title="Add 16 columns">+16</button>
+                        <button id="removeStepBtn" class="length-pill" title="Remove 16 columns">-16</button>
+                    </div>
+
+                    <div class="bpm-control-wrap">
+                        <span class="ctrl-label">TEMPO:</span>
+                        <input type="range" id="studioBpmSlider" min="60" max="220" value="128" class="studio-slider" />
+                        <span id="studioBpmVal" class="bpm-value">128 BPM</span>
+                    </div>
+
+                    <div class="genre-kits-row">
+                        <span class="ctrl-label">STYLE:</span>
+                        <button class="kit-pill active" data-kit="cyberpunk">Cyberpunk</button>
+                        <button class="kit-pill" data-kit="trap">Trap 808</button>
+                        <button class="kit-pill" data-kit="lofi">Lo-Fi Chill</button>
+                        <button class="kit-pill" data-kit="jazz">Jazz Lounge</button>
+                        <button class="kit-pill" data-kit="classical">Classical Strings</button>
+                        <button class="kit-pill" data-kit="harmonium">Harmonium Raga</button>
+                        <button class="kit-pill" data-kit="indian_raga">Indian Raga</button>
+                        <button class="kit-pill" data-kit="techno">EDM Techno</button>
+                        <button class="kit-pill" data-kit="synthwave">Synthwave</button>
+                        <button class="kit-pill" data-kit="futurebass">Future Bass</button>
+                        <button class="kit-pill" data-kit="drill">UK Drill</button>
+                        <button class="kit-pill" data-kit="chiptune">8-Bit Arcade</button>
+                    </div>
+                </div>
+
+                <!-- Multi-Track Sequencer (Configurable 16, 32, 64, up to 128 Steps) -->
+                <div class="sequencer-container">
+                    <div class="sequencer-top-bar">
+                        <div class="sequencer-title-info">
+                            <span class="ctrl-label">MULTI-TRACK SEQUENCER</span>
+                            <span id="activeTrackCountBadge" class="track-count-badge">8 Tracks • 16 Columns</span>
+                        </div>
+                        <div class="sequencer-actions">
+                            <button id="addTrackDropdownBtn" class="glass-pill-btn add-track-btn" title="Add another instrument track">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                                </svg>
+                                <span>Add Instrument</span>
+                            </button>
+                            <div id="addTrackMenu" class="instrument-dropdown-menu" style="display:none;">
+                                <div class="inst-category-title">DRUMS & PERCUSSION</div>
+                                <button class="inst-pick-item" data-inst="kick">Kick 808</button>
+                                <button class="inst-pick-item" data-inst="snare">Snare Drum</button>
+                                <button class="inst-pick-item" data-inst="hihat_cl">Hi-Hat Closed</button>
+                                <button class="inst-pick-item" data-inst="hihat_op">Hi-Hat Open</button>
+                                <button class="inst-pick-item" data-inst="clap">Cyber Clap</button>
+                                <button class="inst-pick-item" data-inst="tabla_bayan">Tabla Bayan (Bass Dha)</button>
+                                <button class="inst-pick-item" data-inst="tabla_dayan">Tabla Dayan (High Na)</button>
+                                <button class="inst-pick-item" data-inst="tom">Tom Drum</button>
+                                <button class="inst-pick-item" data-inst="crash">Crash Cymbal</button>
+                                <button class="inst-pick-item" data-inst="rimshot">Rimshot Click</button>
+                                <div class="inst-category-title">INDIAN & ACOUSTIC</div>
+                                <button class="inst-pick-item" data-inst="flute">Bansuri Bamboo Flute</button>
+                                <button class="inst-pick-item" data-inst="sitar">Indian Sitar</button>
+                                <button class="inst-pick-item" data-inst="harmonium">Harmonium (Reed)</button>
+                                <button class="inst-pick-item" data-inst="violin">Violin / Strings</button>
+                                <button class="inst-pick-item" data-inst="guitar">Acoustic Guitar</button>
+                                <div class="inst-category-title">KEYS & BRASS</div>
+                                <button class="inst-pick-item" data-inst="piano">Grand Piano</button>
+                                <button class="inst-pick-item" data-inst="jazz_sax">Jazz Saxophone</button>
+                                <div class="inst-category-title">BASS & SYNTHS</div>
+                                <button class="inst-pick-item" data-inst="sub_bass">Sub Bass 808</button>
+                                <button class="inst-pick-item" data-inst="jazz_bass">Jazz Upright Bass</button>
+                                <button class="inst-pick-item" data-inst="synth_pluck">Synth Pluck</button>
+                                <button class="inst-pick-item" data-inst="lead_synth">Lead Synth Arp</button>
+                                <button class="inst-pick-item" data-inst="chiptune">8-Bit Chiptune</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="sequencerHeaderRow" class="sequencer-header-row">
+                        <div class="seq-track-label-col">TRACK / CONTROLS</div>
+                        <div id="seqStepsHeaderCol" class="seq-steps-col">
+                            <!-- Populated dynamically based on active steps count -->
+                        </div>
+                    </div>
+                    <div id="sequencerGrid" class="sequencer-grid">
+                        <!-- Populated dynamically: tracks with step cells, Mute, Solo, and Delete -->
+                    </div>
+                </div>
+
+                <!-- Bottom Row: Drum Machine Pads + Full Interactive Piano Roll Model -->
+                <div class="studio-instruments-row">
+                    <!-- Left: 12 Drum Trigger Pads (Including Indian Tabla Bayan & Dayan) -->
+                    <div class="drum-pads-section">
+                        <div class="section-badge">DRUM & PERCUSSION PADS (1-12)</div>
+                        <div class="drum-pads-grid drum-pads-grid-12">
+                            <button class="drum-pad" data-pad="0" data-color="orange"><span class="pad-name">Kick 808</span><span class="pad-hotkey">1</span></button>
+                            <button class="drum-pad" data-pad="1" data-color="yellow"><span class="pad-name">Snare</span><span class="pad-hotkey">2</span></button>
+                            <button class="drum-pad" data-pad="2" data-color="magenta"><span class="pad-name">Hi-Hat Cl</span><span class="pad-hotkey">3</span></button>
+                            <button class="drum-pad" data-pad="3" data-color="magenta"><span class="pad-name">Hi-Hat Op</span><span class="pad-hotkey">4</span></button>
+                            <button class="drum-pad" data-pad="4" data-color="blue"><span class="pad-name">Cyber Clap</span><span class="pad-hotkey">5</span></button>
+                            <button class="drum-pad" data-pad="5" data-color="purple"><span class="pad-name">Tabla Bayan</span><span class="pad-hotkey">6</span></button>
+                            <button class="drum-pad" data-pad="6" data-color="yellow"><span class="pad-name">Tabla Dayan</span><span class="pad-hotkey">7</span></button>
+                            <button class="drum-pad" data-pad="7" data-color="orange"><span class="pad-name">Tom Drum</span><span class="pad-hotkey">8</span></button>
+                            <button class="drum-pad" data-pad="8" data-color="yellow"><span class="pad-name">Crash</span><span class="pad-hotkey">9</span></button>
+                            <button class="drum-pad" data-pad="9" data-color="cyan"><span class="pad-name">Sub Bass</span><span class="pad-hotkey">0</span></button>
+                            <button class="drum-pad" data-pad="10" data-color="blue"><span class="pad-name">Rimshot</span><span class="pad-hotkey">-</span></button>
+                            <button class="drum-pad" data-pad="11" data-color="emerald"><span class="pad-name">Flute Pluck</span><span class="pad-hotkey">=</span></button>
+                        </div>
+                    </div>
+
+                    <!-- Right: Full Playable Piano Model with Instrument Sound Switcher & Octave Shift -->
+                    <div class="synth-keyboard-section">
+                        <div class="synth-top-controls">
+                            <div class="keyboard-instrument-picker">
+                                <span class="ctrl-label">SOUND:</span>
+                                <button class="kbd-inst-pill active" data-kbd-inst="piano">Grand Piano</button>
+                                <button class="kbd-inst-pill" data-kbd-inst="flute">Bansuri Flute</button>
+                                <button class="kbd-inst-pill" data-kbd-inst="sitar">Sitar</button>
+                                <button class="kbd-inst-pill" data-kbd-inst="harmonium">Harmonium</button>
+                                <button class="kbd-inst-pill" data-kbd-inst="violin">Violin</button>
+                                <button class="kbd-inst-pill" data-kbd-inst="guitar">Guitar</button>
+                                <button class="kbd-inst-pill" data-kbd-inst="lead_synth">Lead Synth</button>
+                                <button class="kbd-inst-pill" data-kbd-inst="chiptune">8-Bit Arcade</button>
+                            </div>
+                            <div class="keyboard-octave-wrap">
+                                <span class="ctrl-label">OCTAVE:</span>
+                                <button id="octaveDownBtn" class="octave-pill" title="Shift Octave Down">-</button>
+                                <span id="octaveDisplay" class="octave-display">OCT 4</span>
+                                <button id="octaveUpBtn" class="octave-pill" title="Shift Octave Up">+</button>
+                            </div>
+                        </div>
+                        <div class="piano-roll-keys" id="pianoRollKeys">
+                            <!-- Octave 3 (Low) -->
+                            <div class="piano-key white" data-note-offset="-12" data-key="Z"><span>C3</span><kbd>Z</kbd></div>
+                            <div class="piano-key black" data-note-offset="-11" data-key="S" style="left: 3.56%;"><span>C#3</span><kbd>S</kbd></div>
+                            <div class="piano-key white" data-note-offset="-10" data-key="X"><span>D3</span><kbd>X</kbd></div>
+                            <div class="piano-key black" data-note-offset="-9" data-key="D" style="left: 8.83%;"><span>D#3</span><kbd>D</kbd></div>
+                            <div class="piano-key white" data-note-offset="-8" data-key="C"><span>E3</span><kbd>C</kbd></div>
+                            <div class="piano-key white" data-note-offset="-7" data-key="V"><span>F3</span><kbd>V</kbd></div>
+                            <div class="piano-key black" data-note-offset="-6" data-key="G" style="left: 19.35%;"><span>F#3</span><kbd>G</kbd></div>
+                            <div class="piano-key white" data-note-offset="-5" data-key="B"><span>G3</span><kbd>B</kbd></div>
+                            <div class="piano-key black" data-note-offset="-4" data-key="H" style="left: 24.62%;"><span>G#3</span><kbd>H</kbd></div>
+                            <div class="piano-key white" data-note-offset="-3" data-key="N"><span>A3</span><kbd>N</kbd></div>
+                            <div class="piano-key black" data-note-offset="-2" data-key="J" style="left: 29.88%;"><span>A#3</span><kbd>J</kbd></div>
+                            <div class="piano-key white" data-note-offset="-1" data-key="M"><span>B3</span><kbd>M</kbd></div>
+
+                            <!-- Octave 4 (Mid / Default) -->
+                            <div class="piano-key white" data-note-offset="0" data-key="Q"><span>C4</span><kbd>Q</kbd></div>
+                            <div class="piano-key black" data-note-offset="1" data-key="2" style="left: 40.41%;"><span>C#4</span><kbd>2</kbd></div>
+                            <div class="piano-key white" data-note-offset="2" data-key="W"><span>D4</span><kbd>W</kbd></div>
+                            <div class="piano-key black" data-note-offset="3" data-key="3" style="left: 45.67%;"><span>D#4</span><kbd>3</kbd></div>
+                            <div class="piano-key white" data-note-offset="4" data-key="E"><span>E4</span><kbd>E</kbd></div>
+                            <div class="piano-key white" data-note-offset="5" data-key="R"><span>F4</span><kbd>R</kbd></div>
+                            <div class="piano-key black" data-note-offset="6" data-key="5" style="left: 56.20%;"><span>F#4</span><kbd>5</kbd></div>
+                            <div class="piano-key white" data-note-offset="7" data-key="T"><span>G4</span><kbd>T</kbd></div>
+                            <div class="piano-key black" data-note-offset="8" data-key="6" style="left: 61.46%;"><span>G#4</span><kbd>6</kbd></div>
+                            <div class="piano-key white" data-note-offset="9" data-key="Y"><span>A4</span><kbd>Y</kbd></div>
+                            <div class="piano-key black" data-note-offset="10" data-key="7" style="left: 66.72%;"><span>A#4</span><kbd>7</kbd></div>
+                            <div class="piano-key white" data-note-offset="11" data-key="U"><span>B4</span><kbd>U</kbd></div>
+
+                            <!-- Octave 5 (High) -->
+                            <div class="piano-key white" data-note-offset="12" data-key="I"><span>C5</span><kbd>I</kbd></div>
+                            <div class="piano-key black" data-note-offset="13" data-key="9" style="left: 77.25%;"><span>C#5</span><kbd>9</kbd></div>
+                            <div class="piano-key white" data-note-offset="14" data-key="O"><span>D5</span><kbd>O</kbd></div>
+                            <div class="piano-key black" data-note-offset="15" data-key="0" style="left: 82.51%;"><span>D#5</span><kbd>0</kbd></div>
+                            <div class="piano-key white" data-note-offset="16" data-key="P"><span>E5</span><kbd>P</kbd></div>
+                            <div class="piano-key white" data-note-offset="17" data-key="["><span>F5</span><kbd>[</kbd></div>
+                            <div class="piano-key black" data-note-offset="18" data-key="+" style="left: 93.04%;"><span>F#5</span><kbd>+</kbd></div>
+                            <div class="piano-key white" data-note-offset="19" data-key="]"><span>G5</span><kbd>]</kbd></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toastMsg" class="toast-msg"></div>
+
+    <!-- Scripts -->
+    <script src="js/sound-effects.js?v=1.3.9"></script>
+    <script src="js/audio-visualizer.js?v=1.3.9"></script>
+    <script src="js/music-creator.js?v=1.3.9"></script>
+    <script src="js/speech.js?v=1.3.9"></script>
+    <script src="js/calculator.js?v=1.3.9"></script>
+    <script src="js/math-grapher.js?v=1.3.9"></script>
+    <script src="js/app.js?v=1.3.9"></script>
+</body>
+</html>

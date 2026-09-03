@@ -1,0 +1,9 @@
+/* Google Robotic & Monospace Font Imports */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Share+Tech+Mono&family=JetBrains+Mono:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+
+:root {
+    --font-robotic-display: 'Orbitron', -apple-system, monospace, sans-serif;
+    --font-robotic-mono: 'Share Tech Mono', 'JetBrains Mono', monospace;
+    --font-robotic-code: 'JetBrains Mono', monospace;
+    --font-robotic-ui: 'Space Grotesk', -apple-system, sans-serif;
+}

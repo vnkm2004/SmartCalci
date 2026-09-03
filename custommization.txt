@@ -1,0 +1,3 @@
+1. Follow two theme one black and white for dark mode and White and black for White mode and use robotic text.
+2. Always use transparent and liquid glass for the buttons and device.
+Always use svg icon in place of emoiji.
