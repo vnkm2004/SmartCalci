@@ -82,7 +82,7 @@ export async function onRequest(context) {
 }
 
 // -----------------------------------------------------------------------------
-// PURE MATHEMATICAL EXPRESSION EVALUATOR (AST / Recursive Descent)
+// PURE MATHEMATICAL EXPRESSION EVALUATOR (100% CSP Safe - No new Function / eval)
 // -----------------------------------------------------------------------------
 function evaluateMathExpression(rawExpr, angleUnit = 'DEG', precision = 10) {
     if (!rawExpr || !rawExpr.trim()) {
@@ -98,10 +98,6 @@ function evaluateMathExpression(rawExpr, angleUnit = 'DEG', precision = 10) {
         .replace(/·/g, '*')
         .replace(/÷/g, '/')
         .replace(/[−–]/g, '-')
-        .replace(/π/gi, 'Math.PI')
-        .replace(/\bPI\b/g, 'Math.PI')
-        .replace(/\bE\b/g, 'Math.E')
-        .replace(/√\s*\(?([^)]+)\)?/g, 'Math.sqrt($1)')
         .replace(/\[/g, '(')
         .replace(/\]/g, ')')
         .replace(/\{/g, '(')
@@ -115,18 +111,10 @@ function evaluateMathExpression(rawExpr, angleUnit = 'DEG', precision = 10) {
     // Handle standalone % (e.g. 50% -> (50*0.01))
     expr = expr.replace(/(\d+(\.\d+)?)%/g, '($1*0.01)');
 
-    // Factorials (e.g. 5! -> fact(5))
-    expr = expr.replace(/(\d+)!/g, 'fact($1)');
-
-    // Implicit multiplication
-    expr = expr.replace(/(\d)(\()/g, '$1*$2');
-    expr = expr.replace(/(\))(\()/g, '$1*$2');
-    expr = expr.replace(/(\))(\d)/g, '$1*$2');
-
     steps.push(`Normalized: ${expr}`);
 
     try {
-        const isDeg = angleUnit.toUpperCase() === 'DEG';
+        const isDeg = (angleUnit || 'DEG').toUpperCase() === 'DEG';
         const toRad = (val) => isDeg ? (val * Math.PI / 180) : val;
         const fromRad = (val) => isDeg ? (val * 180 / Math.PI) : val;
 
@@ -138,30 +126,238 @@ function evaluateMathExpression(rawExpr, angleUnit = 'DEG', precision = 10) {
             return r;
         };
 
-        // Context scope for evaluation
-        const scope = {
-            sin: (x) => Math.sin(toRad(x)),
-            cos: (x) => Math.cos(toRad(x)),
-            tan: (x) => Math.tan(toRad(x)),
-            asin: (x) => fromRad(Math.asin(x)),
-            acos: (x) => fromRad(Math.acos(x)),
-            atan: (x) => fromRad(Math.atan(x)),
-            sqrt: Math.sqrt,
-            cbrt: Math.cbrt,
-            abs: Math.abs,
-            log: Math.log10,
-            ln: Math.log,
-            fact: fact,
-            pi: Math.PI,
-            e: Math.E,
-            Math: Math
-        };
+        // 1. Tokenizer
+        const tokens = [];
+        let i = 0;
+        const len = expr.length;
 
-        // Convert exponentiation ^ to **
-        const sanitizedForJs = expr.replace(/\^/g, '**');
+        while (i < len) {
+            const ch = expr[i];
 
-        const fn = new Function(...Object.keys(scope), `"use strict"; return (${sanitizedForJs});`);
-        let numResult = fn(...Object.values(scope));
+            if (/\s/.test(ch)) {
+                i++;
+                continue;
+            }
+
+            // Numbers (including decimals and scientific notation e.g. 1.5e3)
+            if (/\d|\./.test(ch)) {
+                let numStr = '';
+                while (i < len && (/[\d\.]/.test(expr[i]))) {
+                    numStr += expr[i++];
+                }
+                if (i < len && (expr[i] === 'e' || expr[i] === 'E') && i + 1 < len && /[\d+\-]/.test(expr[i + 1])) {
+                    numStr += expr[i++];
+                    if (expr[i] === '+' || expr[i] === '-') numStr += expr[i++];
+                    while (i < len && /\d/.test(expr[i])) numStr += expr[i++];
+                }
+                const val = parseFloat(numStr);
+                if (isNaN(val)) throw new Error(`Invalid number: ${numStr}`);
+                tokens.push({ type: 'num', value: val });
+                continue;
+            }
+
+            // Word identifiers (constants or functions)
+            if (/[a-zA-Z]/.test(ch)) {
+                let name = '';
+                while (i < len && /[a-zA-Z0-9_]/.test(expr[i])) {
+                    name += expr[i++];
+                }
+                const lower = name.toLowerCase();
+                if (lower === 'pi') {
+                    tokens.push({ type: 'num', value: Math.PI });
+                } else if (lower === 'e') {
+                    tokens.push({ type: 'num', value: Math.E });
+                } else if (['sin', 'cos', 'tan', 'asin', 'acos', 'atan', 'sqrt', 'cbrt', 'abs', 'log', 'ln', 'fact'].includes(lower)) {
+                    tokens.push({ type: 'func', value: lower });
+                } else {
+                    throw new Error(`Unknown function or symbol: ${name}`);
+                }
+                continue;
+            }
+
+            // Operators
+            if ('+-*/%^()!'.includes(ch)) {
+                tokens.push({ type: 'op', value: ch });
+                i++;
+                continue;
+            }
+
+            throw new Error(`Unexpected character: ${ch}`);
+        }
+
+        // 2. Insert implicit multiplication where applicable
+        const processedTokens = [];
+        for (let k = 0; k < tokens.length; k++) {
+            const curr = tokens[k];
+            processedTokens.push(curr);
+
+            if (k + 1 < tokens.length) {
+                const next = tokens[k + 1];
+                const currIsEnd = (curr.type === 'num' || (curr.type === 'op' && (curr.value === ')' || curr.value === '!')));
+                const nextIsStart = (next.type === 'num' || next.type === 'func' || (next.type === 'op' && next.value === '('));
+
+                if (currIsEnd && nextIsStart) {
+                    processedTokens.push({ type: 'op', value: '*' });
+                }
+            }
+        }
+
+        // 3. Recursive Descent Parser
+        let pos = 0;
+
+        function peek() {
+            return processedTokens[pos];
+        }
+
+        function consume(expectedValue) {
+            const token = processedTokens[pos];
+            if (!token || (expectedValue !== undefined && token.value !== expectedValue)) {
+                throw new Error(`Expected '${expectedValue}' at position ${pos}`);
+            }
+            pos++;
+            return token;
+        }
+
+        function parseExpression() {
+            let left = parseTerm();
+
+            while (pos < processedTokens.length) {
+                const tok = peek();
+                if (tok && tok.type === 'op' && (tok.value === '+' || tok.value === '-')) {
+                    consume();
+                    const right = parseTerm();
+                    if (tok.value === '+') left = left + right;
+                    else left = left - right;
+                } else {
+                    break;
+                }
+            }
+
+            return left;
+        }
+
+        function parseTerm() {
+            let left = parsePower();
+
+            while (pos < processedTokens.length) {
+                const tok = peek();
+                if (tok && tok.type === 'op' && (tok.value === '*' || tok.value === '/' || tok.value === '%')) {
+                    consume();
+                    const right = parsePower();
+                    if (tok.value === '*') left = left * right;
+                    else if (tok.value === '/') {
+                        if (right === 0) throw new Error("Division by zero");
+                        left = left / right;
+                    } else if (tok.value === '%') {
+                        left = left % right;
+                    }
+                } else {
+                    break;
+                }
+            }
+
+            return left;
+        }
+
+        function parsePower() {
+            let left = parseUnary();
+
+            if (pos < processedTokens.length) {
+                const tok = peek();
+                if (tok && tok.type === 'op' && tok.value === '^') {
+                    consume();
+                    const right = parsePower();
+                    left = Math.pow(left, right);
+                }
+            }
+
+            return left;
+        }
+
+        function parseUnary() {
+            const tok = peek();
+            if (tok && tok.type === 'op') {
+                if (tok.value === '+') {
+                    consume();
+                    return parseUnary();
+                }
+                if (tok.value === '-') {
+                    consume();
+                    return -parseUnary();
+                }
+            }
+            return parsePostfix();
+        }
+
+        function parsePostfix() {
+            let val = parsePrimary();
+
+            while (pos < processedTokens.length) {
+                const tok = peek();
+                if (tok && tok.type === 'op' && tok.value === '!') {
+                    consume();
+                    val = fact(val);
+                } else {
+                    break;
+                }
+            }
+
+            return val;
+        }
+
+        function parsePrimary() {
+            const tok = peek();
+            if (!tok) throw new Error("Unexpected end of expression");
+
+            if (tok.type === 'num') {
+                consume();
+                return tok.value;
+            }
+
+            if (tok.type === 'func') {
+                const fnName = consume().value;
+                consume('(');
+                const arg = parseExpression();
+                consume(')');
+
+                switch (fnName) {
+                    case 'sin': return Math.sin(toRad(arg));
+                    case 'cos': return Math.cos(toRad(arg));
+                    case 'tan': return Math.tan(toRad(arg));
+                    case 'asin': return fromRad(Math.asin(arg));
+                    case 'acos': return fromRad(Math.acos(arg));
+                    case 'atan': return fromRad(Math.atan(arg));
+                    case 'sqrt':
+                        if (arg < 0) throw new Error("Square root of negative number");
+                        return Math.sqrt(arg);
+                    case 'cbrt': return Math.cbrt(arg);
+                    case 'abs': return Math.abs(arg);
+                    case 'log':
+                        if (arg <= 0) throw new Error("Log of non-positive number");
+                        return Math.log10(arg);
+                    case 'ln':
+                        if (arg <= 0) throw new Error("Ln of non-positive number");
+                        return Math.log(arg);
+                    case 'fact': return fact(arg);
+                    default: throw new Error(`Unknown function ${fnName}`);
+                }
+            }
+
+            if (tok.type === 'op' && tok.value === '(') {
+                consume('(');
+                const val = parseExpression();
+                consume(')');
+                return val;
+            }
+
+            throw new Error(`Unexpected token: ${tok.value}`);
+        }
+
+        const numResult = parseExpression();
+
+        if (pos < processedTokens.length) {
+            throw new Error(`Unexpected token after expression: ${processedTokens[pos].value}`);
+        }
 
         if (typeof numResult !== 'number' || isNaN(numResult)) {
             return { success: false, expression: rawExpr, error: "Calculation resulted in an invalid number (NaN)" };
@@ -172,8 +368,8 @@ function evaluateMathExpression(rawExpr, angleUnit = 'DEG', precision = 10) {
 
         // Clean floating point inaccuracies (e.g. 0.1 + 0.2 -> 0.3)
         const factor = Math.pow(10, precision);
-        numResult = Math.round(numResult * factor) / factor;
-        const formattedResult = Number(numResult.toFixed(precision)).toString();
+        const rounded = Math.round(numResult * factor) / factor;
+        const formattedResult = Number(rounded.toFixed(precision)).toString();
 
         steps.push(`Evaluated Result: ${formattedResult}`);
 
@@ -181,7 +377,7 @@ function evaluateMathExpression(rawExpr, angleUnit = 'DEG', precision = 10) {
             success: true,
             expression: rawExpr,
             formattedResult: formattedResult,
-            numericResult: numResult,
+            numericResult: rounded,
             steps: steps
         };
     } catch (err) {
@@ -193,14 +389,14 @@ function evaluateMathExpression(rawExpr, angleUnit = 'DEG', precision = 10) {
 // GOOGLE GEMINI AI PROBLEM SOLVER & NLP FALLBACK
 // -----------------------------------------------------------------------------
 async function handleAiSolve(query, clientApiKey, env) {
-    const key = clientApiKey || env.GEMINI_API_KEY;
+    const key = (clientApiKey && clientApiKey.trim()) || (env && env.GEMINI_API_KEY && env.GEMINI_API_KEY.trim()) || '';
 
     if (!query || !query.trim()) {
         return { success: false, error: "Query is empty", spokenResponse: "Please ask a math question." };
     }
 
     // 1. Try Gemini AI if API key is present
-    if (key && key.trim()) {
+    if (key) {
         try {
             const prompt = `You are a high-precision mathematical AI problem solver.
 Solve the following user query step-by-step:
@@ -220,23 +416,30 @@ You MUST reply ONLY with a raw, valid JSON object (no markdown, no backticks, no
   "detectedLanguage": "English"
 }`;
 
-            const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key.trim()}`;
-            const geminiRes = await fetch(geminiUrl, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    contents: [{ parts: [{ text: prompt }] }],
-                    generationConfig: { temperature: 0.1, maxOutputTokens: 800 }
-                })
-            });
+            const models = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-1.5-pro'];
+            for (const model of models) {
+                try {
+                    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
+                    const geminiRes = await fetch(geminiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            contents: [{ parts: [{ text: prompt }] }],
+                            generationConfig: { temperature: 0.1, maxOutputTokens: 800 }
+                        })
+                    });
 
-            if (geminiRes.ok) {
-                const data = await geminiRes.json();
-                const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-                const cleanJson = rawText.replace(/```json/gi, '').replace(/```/g, '').trim();
-                const parsed = JSON.parse(cleanJson);
-                parsed.provider = "gemini-1.5-flash (Cloudflare Edge)";
-                return parsed;
+                    if (geminiRes.ok) {
+                        const data = await geminiRes.json();
+                        const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+                        const cleanJson = rawText.replace(/```json/gi, '').replace(/```/g, '').trim();
+                        const parsed = JSON.parse(cleanJson);
+                        parsed.provider = `${model} (Cloudflare Edge)`;
+                        return parsed;
+                    }
+                } catch (err) {
+                    // Try next model fallback
+                }
             }
         } catch (e) {
             // Fall through to local NLP
@@ -266,7 +469,8 @@ function localNlpSolve(query) {
         .replace(/to the power (of)?/gi, '^')
         .trim();
 
-    const mathMatch = clean.match(/[0-9\.\+\-\*\/\^\(\)\%\!a-z]+/gi);
+    // Extract numbers, operators, and math functions
+    const mathMatch = clean.match(/[0-9\.\+\-\*\/\^\(\)\%\!a-zA-Z]+/gi);
     const mathExpr = mathMatch ? mathMatch.join('') : clean;
 
     const calc = evaluateMathExpression(mathExpr, 'DEG', 10);
@@ -279,7 +483,7 @@ function localNlpSolve(query) {
             result: calc.formattedResult,
             numericResult: calc.numericResult,
             steps: [
-                `Recognized Voice Query: ${query}`,
+                `Recognized Query: ${query}`,
                 `Extracted Formula: ${mathExpr}`,
                 ...calc.steps,
                 `Final Answer = ${calc.formattedResult}`
