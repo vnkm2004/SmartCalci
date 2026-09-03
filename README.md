@@ -171,6 +171,26 @@ http://localhost:8080/
 
 ---
 
+## ⚡ Deploy to Cloudflare Pages (100% Free & Serverless)
+
+SmartCalculator is configured for **Zero-Config Cloudflare Pages deployment** with serverless edge functions in `functions/api/`:
+
+### 1-Click Setup via Cloudflare Dashboard:
+1. Push your repository to **GitHub**.
+2. Go to the [Cloudflare Dashboard](https://dash.cloudflare.com/) $\rightarrow$ **Workers & Pages** $\rightarrow$ **Create Application** $\rightarrow$ **Pages** $\rightarrow$ **Connect to Git**.
+3. Select your `SmartCalculator` repository.
+4. Set the build settings:
+   - **Framework preset**: `None`
+   - **Build command**: *(leave empty)*
+   - **Build output directory**: `src/main/resources/static`
+5. Click **Save and Deploy**!
+
+Cloudflare will instantly serve the frontend globally via Cloudflare CDN and execute all `/api/*` math routes serverlessly on Cloudflare Workers via [`functions/api/[[path]].js`](file:///c:/Users/vishw/Desktop/PROJECTS/SmartCalculator/functions/api/%5B%5Bpath%5D%5D.js)!
+
+*(Optional)*: In Cloudflare Pages $\rightarrow$ **Settings** $\rightarrow$ **Environment Variables**, add `GEMINI_API_KEY` to provide a global default Gemini AI key for all users!
+
+---
+
 ## 📂 Project Structure
 
 ```text
