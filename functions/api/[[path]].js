@@ -300,6 +300,14 @@ function localNlpSolve(query) {
 // Cloudflare Workers with Static Assets compatibility
 export default {
     async fetch(request, env, ctx) {
-        return onRequest({ request, env, params: {} });
+        const url = new URL(request.url);
+
+        // Handle API requests
+        if (url.pathname.startsWith('/api/')) {
+            return onRequest({ request, env, params: {} });
+        }
+
+        // Serve the SmartCalci website
+        return env.ASSETS.fetch(request);
     }
 };
